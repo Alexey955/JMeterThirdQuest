@@ -8,16 +8,6 @@
       <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
       <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
         <collectionProp name="Arguments.arguments">
-          <elementProp name="counter" elementType="Argument">
-            <stringProp name="Argument.name">counter</stringProp>
-            <stringProp name="Argument.value">1</stringProp>
-            <stringProp name="Argument.metadata">=</stringProp>
-          </elementProp>
-          <elementProp name="switch" elementType="Argument">
-            <stringProp name="Argument.name">switch</stringProp>
-            <stringProp name="Argument.value">0</stringProp>
-            <stringProp name="Argument.metadata">=</stringProp>
-          </elementProp>
           <elementProp name="reference" elementType="Argument">
             <stringProp name="Argument.name">reference</stringProp>
             <stringProp name="Argument.value"></stringProp>
@@ -76,17 +66,38 @@
           </HtmlExtractor>
           <hashTree/>
         </hashTree>
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="JSR223 Sampler" enabled="true">
+          <stringProp name="scriptLanguage">groovy</stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="cacheKey">true</stringProp>
+          <stringProp name="script">file = new File(&apos;shortDescriptions.csv&apos;)
+props.put(&quot;file&quot;, file)</stringProp>
+        </JSR223Sampler>
+        <hashTree/>
         <WhileController guiclass="WhileControllerGui" testclass="WhileController" testname="While Controller" enabled="true">
           <stringProp name="WhileController.condition">${__javaScript(!&quot;${counterTwo}&quot;.equals(&quot;51&quot;))}</stringProp>
         </WhileController>
         <hashTree>
+          <CounterConfig guiclass="CounterConfigGui" testclass="CounterConfig" testname="Counter" enabled="true">
+            <stringProp name="CounterConfig.start">1</stringProp>
+            <stringProp name="CounterConfig.end"></stringProp>
+            <stringProp name="CounterConfig.incr">1</stringProp>
+            <stringProp name="CounterConfig.name">counter</stringProp>
+            <stringProp name="CounterConfig.format"></stringProp>
+            <boolProp name="CounterConfig.per_user">false</boolProp>
+          </CounterConfig>
+          <hashTree/>
           <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="JSR223 Sampler" enabled="true">
             <stringProp name="scriptLanguage">groovy</stringProp>
             <stringProp name="parameters"></stringProp>
             <stringProp name="filename"></stringProp>
             <stringProp name="cacheKey">true</stringProp>
-            <stringProp name="script">reference = String.valueOf(vars.get(&quot;References_&quot; + vars.get(&quot;counter&quot;)))
-vars.put(&quot;reference&quot;, reference)</stringProp>
+            <stringProp name="script">reference = vars.get(&quot;References_&quot; + vars.get(&quot;counter&quot;))
+
+strWithoutPrefix = reference.substring(6)
+
+vars.put(&quot;reference&quot;, strWithoutPrefix)</stringProp>
           </JSR223Sampler>
           <hashTree/>
           <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="HTTP Request" enabled="true">
@@ -97,7 +108,7 @@ vars.put(&quot;reference&quot;, reference)</stringProp>
             <stringProp name="HTTPSampler.port"></stringProp>
             <stringProp name="HTTPSampler.protocol"></stringProp>
             <stringProp name="HTTPSampler.contentEncoding"></stringProp>
-            <stringProp name="HTTPSampler.path">https://en.wikipedia.org${reference}</stringProp>
+            <stringProp name="HTTPSampler.path">https://en.wikipedia.org/w/api.php?action=query&amp;prop=extracts&amp;exintro=1&amp;explaintext=1&amp;titles=${reference}&amp;continue=&amp;format=json&amp;formatversion=2</stringProp>
             <stringProp name="HTTPSampler.method">GET</stringProp>
             <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
             <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -108,93 +119,28 @@ vars.put(&quot;reference&quot;, reference)</stringProp>
             <stringProp name="HTTPSampler.response_timeout"></stringProp>
           </HTTPSamplerProxy>
           <hashTree>
-            <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Regular Expression Extractor" enabled="true">
-              <stringProp name="RegexExtractor.useHeaders">false</stringProp>
-              <stringProp name="RegexExtractor.refname">NotExists</stringProp>
-              <stringProp name="RegexExtractor.regex">Wikipedia does not have an article with this exact name</stringProp>
-              <stringProp name="RegexExtractor.template">$1$</stringProp>
-              <stringProp name="RegexExtractor.default">DEFAULT</stringProp>
-              <stringProp name="RegexExtractor.match_number">1</stringProp>
-            </RegexExtractor>
+            <JSONPostProcessor guiclass="JSONPostProcessorGui" testclass="JSONPostProcessor" testname="JSON Extractor" enabled="true">
+              <stringProp name="JSONPostProcessor.referenceNames">description</stringProp>
+              <stringProp name="JSONPostProcessor.jsonPathExprs">$.[*].[*].[*].extract</stringProp>
+              <stringProp name="JSONPostProcessor.match_numbers"></stringProp>
+              <stringProp name="JSONPostProcessor.defaultValues">DEFAULT</stringProp>
+            </JSONPostProcessor>
             <hashTree/>
             <JSR223PostProcessor guiclass="TestBeanGUI" testclass="JSR223PostProcessor" testname="JSR223 PostProcessor" enabled="true">
               <stringProp name="cacheKey">true</stringProp>
               <stringProp name="filename"></stringProp>
               <stringProp name="parameters"></stringProp>
-              <stringProp name="script">if(String.valueOf(vars.get(&quot;NotExists_g0&quot;)) != &quot;Wikipedia does not have an article with this exact name&quot;){
-	vars.put(&quot;switch&quot;, &quot;1&quot;)
+              <stringProp name="script">if(!vars.get(&quot;description&quot;).equals(&quot;&quot;) &amp;&amp; !vars.get(&quot;description&quot;).equals(&quot;DEFAULT&quot;)){
+
+	file = props.get(&quot;file&quot;)
+	file.append(vars.get(&quot;description&quot;).replace(&quot;\n&quot;, &quot;&quot;) + &quot;\r\n&quot;)	
+
+	counterTwo = Integer.parseInt(vars.get(&quot;counterTwo&quot;)) + 1
+	vars.put(&quot;counterTwo&quot;, String.valueOf(counterTwo))
 }</stringProp>
               <stringProp name="scriptLanguage">groovy</stringProp>
             </JSR223PostProcessor>
             <hashTree/>
-          </hashTree>
-          <IfController guiclass="IfControllerPanel" testclass="IfController" testname="If Controller" enabled="true">
-            <stringProp name="IfController.condition">${__javaScript(&quot;${switch}&quot;.equals(&quot;1&quot;))}</stringProp>
-            <boolProp name="IfController.evaluateAll">false</boolProp>
-            <boolProp name="IfController.useExpression">true</boolProp>
-          </IfController>
-          <hashTree>
-            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="HTTP Request" enabled="true">
-              <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
-                <collectionProp name="Arguments.arguments"/>
-              </elementProp>
-              <stringProp name="HTTPSampler.domain"></stringProp>
-              <stringProp name="HTTPSampler.port"></stringProp>
-              <stringProp name="HTTPSampler.protocol"></stringProp>
-              <stringProp name="HTTPSampler.contentEncoding"></stringProp>
-              <stringProp name="HTTPSampler.path">https://en.wikipedia.org${reference}</stringProp>
-              <stringProp name="HTTPSampler.method">GET</stringProp>
-              <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
-              <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
-              <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
-              <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
-              <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
-              <stringProp name="HTTPSampler.connect_timeout"></stringProp>
-              <stringProp name="HTTPSampler.response_timeout"></stringProp>
-            </HTTPSamplerProxy>
-            <hashTree>
-              <HtmlExtractor guiclass="HtmlExtractorGui" testclass="HtmlExtractor" testname="CSS Selector Extractor" enabled="true">
-                <stringProp name="HtmlExtractor.refname">shordDescription</stringProp>
-                <stringProp name="HtmlExtractor.expr">#mw-content-text &gt; div &gt; p</stringProp>
-                <stringProp name="HtmlExtractor.attribute"></stringProp>
-                <stringProp name="HtmlExtractor.default">DEFAULT</stringProp>
-                <boolProp name="HtmlExtractor.default_empty_value">false</boolProp>
-                <stringProp name="HtmlExtractor.match_number">1</stringProp>
-                <stringProp name="HtmlExtractor.extractor_impl"></stringProp>
-              </HtmlExtractor>
-              <hashTree/>
-              <JSR223PostProcessor guiclass="TestBeanGUI" testclass="JSR223PostProcessor" testname="JSR223 PostProcessor" enabled="true">
-                <stringProp name="scriptLanguage">groovy</stringProp>
-                <stringProp name="parameters"></stringProp>
-                <stringProp name="filename"></stringProp>
-                <stringProp name="cacheKey">true</stringProp>
-                <stringProp name="script">if(vars.get(&quot;counter&quot;).equals(&quot;1&quot;)){
-	
-	file = new File(&apos;shortDescriptions.txt&apos;)
-//	file.write(vars.get(&quot;shordDescription&quot;) + &quot;\r\n&quot;)	
-	file.write(vars.get(&quot;counterTwo&quot;) + &quot;: &quot; + vars.get(&quot;shordDescription&quot;) + &quot;\r\n&quot;)
-
-	counter = Integer.parseInt(vars.get(&quot;counterTwo&quot;)) + 1
-	vars.put(&quot;counterTwo&quot;, String.valueOf(counter))
-	
-}else if(!vars.get(&quot;shordDescription&quot;).equals(&quot;&quot;)){
-	
-	file = new File(&apos;shortDescriptions.txt&apos;)
-//	file.append(vars.get(&quot;shordDescription&quot;) + &quot;\r\n&quot;)
-	file.append(vars.get(&quot;counterTwo&quot;) + &quot;: &quot; + vars.get(&quot;shordDescription&quot;) + &quot;\r\n&quot;)	
-
-	counter = Integer.parseInt(vars.get(&quot;counterTwo&quot;)) + 1
-	vars.put(&quot;counterTwo&quot;, String.valueOf(counter))
-}
-
-counter = Integer.parseInt(vars.get(&quot;counter&quot;)) + 1
-vars.put(&quot;counter&quot;, String.valueOf(counter))
-
-vars.put(&quot;switch&quot;, &quot;0&quot;)
-</stringProp>
-              </JSR223PostProcessor>
-              <hashTree/>
-            </hashTree>
           </hashTree>
           <TestAction guiclass="TestActionGui" testclass="TestAction" testname="Flow Control Action" enabled="true">
             <intProp name="ActionProcessor.action">1</intProp>
